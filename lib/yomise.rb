@@ -39,6 +39,10 @@ module Yomise
 		elsif format.to_s == "hash"
 			h, i = to_hash(csv, **opt)
 			return h
+		elsif format.to_s == "csv"
+			return csv.to_csv
+		elsif format.to_s == "numo"
+			return csv  # Under Construction
 		else # include format.nil? (in this case, convert to Daru::DF).
 
 			h, ind_orig = to_hash(csv, index: index, **opt)
@@ -68,6 +72,10 @@ module Yomise
 		elsif format.to_s == "hash"
 			h, i = to_hash(a2d, **opt)
 			return h
+		elsif format.to_s == "csv"
+			return a2d.to_csv
+		elsif format.to_s == "numo"
+			return a2d  # Under Construction
 		else # include format.nil?
 			h, ind_orig = to_hash(a2d, index: index, **opt)
 			ans = to_df(h, format: format)
@@ -148,7 +156,7 @@ module Yomise
 
 	# Genarate Array from excel file
 	def open_excel(path, sheet_i, encoding: "utf-8")
-		if /xlsx$/ === path
+		if /xls(x|m)$/ === path
 			puts "Sorry, encoding option is not supported yet for xlsx file." if encoding != "utf-8"
 
 			book = Roo::Excelx.new(path)
