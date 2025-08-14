@@ -14,23 +14,49 @@ module Yomise
 	module_function
 
 	def read(path, **opt)
-		return /csv$/ === path ? read_csv(path, **opt) : read_excel(path, **opt)
+		return /csv$/i === path ? read_csv(path, **opt) : read_excel(path, **opt)
 	end
 	
 	# ##Generate Array from CSV File, and convert it to Hash or DataFrame.
 	# **opt candidate= line_from: 1, header: 0
 	# ver. 0.3.8~ default format=:daru
-	def read_csv(path, format: :daru, encoding: "utf-8", col_sep: ",", index: nil, **opt)
+	def read_csv(path, format: :daru, encoding: "utf-8", liberal_parsing: true, col_sep: ",", index: nil, **opt)
 		## TODO.. index: option that designate column number to generate DF index.
 		## That is, revicing set_index method.
 
 		# Get 2D Array
 		begin
-			csv = CSV.parse(File.open(path, encoding: encoding, &:read), col_sep: col_sep)
+			if liberal_parsing
+				csvd = CSV.read(path, encoding: encoding, liberal_parsing: true)
+				if encoding.to_s.downcase != "utf-8" 
+					csv = csvd.to_a.map {|l| l.map {|cell| cell.nil? ? nil : cell.encode("utf-8", invalid: :replace, replace: '') }}
+				else
+					csv = csvd
+				end
+				
+				encoding = "utf-8"
+			else
+				# Old style (Not Recommended)
+				# This "&:read" is not Yomise's function(defined avobe here).. parhaps File's method.
+				csv = CSV.parse(File.open(path, encoding: encoding, &:read), col_sep: col_sep)
+			end
 		rescue
 			# Try Another Encoding
 			## puts "Fail Encoding #{encoding}. Trying cp932..."
-			csv = CSV.parse(File.open(path, encoding: "cp932", &:read), col_sep: col_sep)
+			if liberal_parsing
+				csvd = CSV.read(path, encoding: "cp932", liberal_parsing: true)
+				if encoding.to_s.downcase != "utf-8" 
+					csv = csvd.to_a.map {|l| l.map {|cell| cell.nil? ? nil : cell.encode("utf-8", invalid: :replace, replace: '') }}
+				else
+					csv = csvd
+				end
+				
+				encoding = "UTF-8"
+			else
+				# Old style (Not Recommended)
+				# This "&:read" is not Yomise's function(defined avobe here).. parhaps File's method.
+				csv = CSV.parse(File.open(path, encoding: "cp932", &:read), col_sep: col_sep)
+			end
 			encoding = "cp932"
 		end
 		
@@ -50,7 +76,7 @@ module Yomise
 			
 			# Converting Encode and Setting index.. rover not supported yet
 			if format.to_s == "daru" || format.nil?
-				ans.convert_enc!(from: encoding, to: "utf-8")
+				ans.convert_enc!(from: encoding, to: "utf-8") if encoding.to_s.downcase != "utf-8"
 				begin
 					ans.index = ind_orig if index
 				rescue
