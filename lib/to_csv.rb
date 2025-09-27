@@ -14,9 +14,17 @@ class Daru::DataFrame
 		return ans
 	end
 	
-	def write_csv(path, encoding: nil)
-		enc = encoding.nil? ? "" : ":#{encoding}"
-		open(path, "w#{enc}") { _1.write to_csv }
+	def write_csv(path, encoding: nil, alt: false)
+		if alt
+			# Experimental: faster algorithm
+			# ""付加を先にDaru上でやってあげる案
+			
+			#今はとりあえず
+			self.to_daru.write_csv path, encoding: encoding
+		else
+			enc = encoding.nil? ? "" : ":#{encoding}"
+			open(path, "w#{enc}") { _1.write to_csv }
+		end
 	end
 
 	# To avoid bug about adding column to Daru::DataFrame
@@ -63,7 +71,7 @@ class Daru::DataFrame
 		
 		# index, vectors are Arrays. 'values' is String or Array.
 		## 文字列データなどで最初のデータだけ欲しければ agg: :first
-		piv = self.pivot_table index: index, vectors: vectors, agg: :mean, values: values
+		piv = self.pivot_table index: index, vectors: vectors, agg: agg, values: values
 		piv.vectors = Daru::Index.new( piv.vectors.to_a.map { _1.join("-") } )
 		piv.index = Daru::Vector.new( piv.index.to_a.map { _1.join("-") } )
 		
