@@ -19,8 +19,7 @@ module Yomise
 	
 	# ##Generate Array from CSV File, and convert it to Hash or DataFrame.
 	# **opt candidate= line_from: 1, header: 0
-	# ver. 0.3.8~ default format=:daru
-	def read_csv(path, format: :daru, encoding: "utf-8", liberal_parsing: true, col_sep: ",", index: nil, **opt)
+	def read_csv(path, format: :rover, encoding: "utf-8", liberal_parsing: true, reconvert_utf8: false, col_sep: ",", index: nil, **opt)
 		## TODO.. index: option that designate column number to generate DF index.
 		## That is, revicing set_index method.
 
@@ -59,6 +58,10 @@ module Yomise
 			end
 			encoding = "cp932"
 		end
+
+		if reconvert_utf8
+			csv = csv.map {|l| l.map {|cell| cell.nil? ? nil : cell.encode("UTF-8")}}
+		end
 		
 		if format.to_s == "array"
 			return csv
@@ -75,7 +78,7 @@ module Yomise
 			ans = to_df(h, format: format)
 			
 			# Converting Encode and Setting index.. rover not supported yet
-			if format.to_s == "daru" || format.nil?
+			if format.to_s == "daru"
 				ans.convert_enc!(from: encoding, to: "utf-8") if encoding.to_s.downcase != "utf-8"
 				begin
 					ans.index = ind_orig if index
@@ -90,7 +93,7 @@ module Yomise
 
 	# ##Generate Array from EXCEL File, and convert it to Hash or DataFrame.
 	# **opt candidate= line_from: 1, header: 0)
-	def read_excel(path, sheet_i: 0, format: :daru, encoding: "utf-8", index: nil, **opt)
+	def read_excel(path, sheet_i: 0, format: :rover, encoding: "utf-8", index: nil, **opt)
 		a2d = open_excel(path, sheet_i, encoding: encoding) # Get 2D Array
 
 		if format.to_s == "array"
@@ -105,7 +108,7 @@ module Yomise
 		else # include format.nil?
 			h, ind_orig = to_hash(a2d, index: index, **opt)
 			ans = to_df(h, format: format)
-			if format.to_s == "daru" || format.nil?
+			if format.to_s == "daru"
 				begin
 					ans.index = ind_orig if index
 				rescue
@@ -168,14 +171,42 @@ module Yomise
 	end
 	
 	# Convert Hash to DataFrame
-	def to_df(d, format: :daru)
-		if format.to_s == "daru" || format.nil?
+	def to_df(d, format: :rover)
+		if format.to_s == "daru"
 			Daru::DataFrame.new(d)
 		else
 			Rover::DataFrame.new(d)
 		end
 	end
-	
+
+	# Rover用: nil や nanを取り除くマスク、または二値の列(true-false value)生成
+	def is_available(value, truevalue: true, falsevalue: false, blank_str_is_false: true)
+		if value.nil?
+			falsevalue
+		else
+			if value.is_a? Numeric
+				!value.nan? ? truevalue : falsevalue
+			elsif value.is_a? String
+				if value == ""
+					blank_str_is_false ? falsevalue : truevalue
+				else
+					truevalue
+				end
+			else
+				truevalue
+			end
+		end
+	end
+
+	def available(data, truevalue: true, falsevalue: false, blank_str_is_false: true)
+		if data.is_a? Rover::Vector
+			data.map { |v| is_available(v, truevalue: truevalue, falsevalue: falsevalue, blank_str_is_false: blank_str_is_false) }
+		elsif data.is_a? Rover::DataFrame
+			dfdata = data.keys.map {|k| data[k].map { |d| is_available(d, truevalue: truevalue, falsevalue: falsevalue, blank_str_is_false: blank_str_is_false) } }
+			Rover::DataFrame.new(data.keys.zip(dfdata).map{[_1, _2]}.to_h)
+		end
+	end
+
 	#----------------------------
 	# Private metods from here
 	#----------------------------

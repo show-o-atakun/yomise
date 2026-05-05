@@ -36,6 +36,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "smarter_csv", ">= 1.4.2"
   spec.add_dependency "roo-xls", ">= 1.2.0"
   spec.add_dependency "spreadsheet", ">= 1.3.0"
+  spec.add_dependency "matrix"
 
   # Uncomment to register a new dependency of your gem
   # spec.add_dependency "example-gem", "~> 1.0"
