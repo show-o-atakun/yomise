@@ -85,7 +85,7 @@ class Daru::DataFrame
 		return piv
 		
 	end
-	
+
 	def to_rover
 		Rover::DataFrame.new(self.to_a[0])
 	end
@@ -111,10 +111,49 @@ class Rover::DataFrame
 		return piv.to_rover
 	end
 	
-	def outer_join
+	def outer_join(other, **kwargs)
 		ddr = self.to_daru
-		# j = ddr.join  ## 外部結合 
+		odr = self.to_daru
+		j = ddr.join(how: :outer, **kwargs)  ## 外部結合 
 		return j.to_rover
 	end
-	
+
+	def categorize(col)
+		if col.is_a?(Array)
+			self[col].to_a.uniq
+		else
+			self[[col]].to_a.uniq
+		end
+	end
+
+	def get_category(categ)
+		a = self[categ.each_key.to_a].to_a
+		mask = a.filter_map.with_index {|v, i|  i if v == categ }
+		return self[mask] 
+	end
+
+	## Roverのleft_joinをエラー回避
+	def left_join_rev(other, on:)
+		left_rows = self.to_a
+		right_rows = other.to_a
+		
+		right_map = right_rows.each_with_object({}) do |row, map|
+			map[row[on]] = row
+		end
+		
+		result_rows = []
+		
+		left_rows.each do |l_row|
+			key = l_row[on]
+			r_row = right_map[key]
+			
+			if r_row
+				result_rows << l_row.merge(r_row)
+			else
+				result_rows << l_row
+			end
+		end
+			
+		Rover::DataFrame.new(result_rows)
+	end
 end
