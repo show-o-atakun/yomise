@@ -1,5 +1,6 @@
 require "daru"
 require "rover"
+require "roo"
 
 class Daru::DataFrame
 	def to_csv()
@@ -116,6 +117,10 @@ class Rover::DataFrame
 		odr = self.to_daru
 		j = ddr.join(how: :outer, **kwargs)  ## 外部結合 
 		return j.to_rover
+	end
+
+	def map(&block)
+		self.to_a.map(&block)
 	end
 
 	def categorize(col)

@@ -2,11 +2,22 @@
 require "csv"
 require "roo-xls"
 require "spreadsheet"
+require "rubyXL"
 require "rover"
 require "daru"
 require_relative "./to_csv"
 require_relative "./longest_line"
 require_relative "yomise/version"
+
+## 欲しい: DateTimeをいい感じのメソッドに変える
+## 2列目以降ならこんな感じ
+# piv.vectors.to_a[1..].each do |c|
+#	piv[c] = piv[c].map { _1.to_s.gsub("T", " ").gsub("+00:00", "")}
+# end
+
+## joinで列順変更不要のものが欲しい
+
+# write_excelでDF横並び、縦並びも可にしたい
 
 module Yomise
   class Error < StandardError; end
@@ -242,6 +253,33 @@ module Yomise
 
 			return a2d
 		end
+	end
+
+	def write_excel(dfs, filename, sheetnames: nil)
+			
+		dfs = [dfs] if !dfs.is_a?(Array)
+		if sheetnames.nil?
+			sheetnames = dfs.map.with_index {|d, i| "sheet#{i+1}" }
+		end
+
+		workbook = RubyXL::Workbook.new
+
+		dfs.each_with_index do |df, idx|
+			worksheet = workbook.add_worksheet(
+				sheetnames.length <= idx ? "sheet#{idx}" : sheetnames[idx].to_s
+			)
+			
+			df.to_h.each_with_index do |(key, itms), coli|
+				worksheet.add_cell(0, coli, key)
+				itms.each_with_index do |itm, linei|
+					worksheet.add_cell(linei+1, coli, itm.to_s)
+				end
+			end
+		end
+
+		workbook.worksheets.delete_at(0)
+		workbook.write(filename)
+
 	end
 
 	# Fix Array (Replace specific values to nil, recognize value type and cast values to the type.)

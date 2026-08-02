@@ -35,6 +35,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rover-df", ">= 0.2.7"
   spec.add_dependency "smarter_csv", ">= 1.4.2"
   spec.add_dependency "roo-xls", ">= 1.2.0"
+  spec.add_dependency "rubyXL", ">=3.4.27"
   spec.add_dependency "spreadsheet", ">= 1.3.0"
   spec.add_dependency "matrix"
 

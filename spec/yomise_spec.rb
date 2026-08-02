@@ -31,4 +31,20 @@ RSpec.describe Yomise do
     end
   end
 
+  it "Rover map works" do
+    input_path = "./spec/fixtures/files/test.csv"
+    # 実行
+    df = Yomise.read_csv(input_path, encoding: "cp932", reconvert_utf8: true, format: :rover)
+    p df.map { _1["column1"] == "く"} 
+  end
+
+  it "write_excel works" do
+    input_path = "./spec/fixtures/files/test.csv"
+    # 実行
+    df = Yomise.read_csv(input_path, encoding: "cp932", reconvert_utf8: true, format: :rover)
+    Yomise::write_excel([df, df], "./test.xlsx", sheetnames: ["Test1", "Test2"])
+
+    dfdaru = Yomise.read_csv(input_path, encoding: "cp932", reconvert_utf8: true, format: :daru)
+    Yomise::write_excel [df, df], "./test_daru.xlsx"
+  end
 end
