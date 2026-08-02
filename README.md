@@ -25,7 +25,7 @@ In this example, variable df is a Daru::DataFrame.
 If you want a hash, or dataframe, format option is helpful.
 
 ```ruby
-require 'easy_sheet_io'
+require 'yomise'
 
 ary  = Yomise.read("sample.xlsx", format: "array")  ## 2-dimentional array
 hash = Yomise.read("sample.xlsx", format: "hash")   ## Hash
@@ -45,7 +45,7 @@ Similarly, option *line_until:* is for the last lines. (These options are for Ha
 You can designate regular expressions as line_from, line_until options.
 
 ```ruby
-require 'easy_sheet_io'
+require 'yomise'
 
 df = Yomise.read("sample.xlsx", format: "rover", header: 7, line_from: 10, line_until: 200)
 df = Yomise.read("sample.xlsx", format: "rover", header: 7, line_from: 10, line_until: /END OF MAIN DATA/)
@@ -86,6 +86,13 @@ You can convert dataframe to CSV file easily. (for both Daru and Rover)
 ```ruby
 df.write_csv("output.csv")
 ```
+
+And you can write to .xlsx too.
+```ruby
+Yomise::write_excel(dfs, "test.xlsx", sheetnames: ["Data1", "Data2"])
+```
+write_excel writes one or more Daru::DataFrame or Rover::DataFrame objects to an .xlsx file.
+Each DataFrame becomes a separate worksheet in the generated workbook.
 
 ## Another tips
 Daru is powerful, but it has not been maintained for a long time, and has some bugs. To avoid them, I try deploying some wrappers in it. All you need is to call yomise.
