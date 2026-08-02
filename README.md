@@ -29,8 +29,8 @@ require 'yomise'
 
 ary  = Yomise.read("sample.xlsx", format: "array")  ## 2-dimentional array
 hash = Yomise.read("sample.xlsx", format: "hash")   ## Hash
-df_d = Yomise.read("sample.xlsx", format: "daru")   ## Daru::DataFrame (Default)
-df_r = Yomise.read("sample.xlsx", format: "rover")  ## Rover::DataFrame
+df_d = Yomise.read("sample.xlsx", format: "daru")   ## Daru::DataFrame
+df_r = Yomise.read("sample.xlsx", format: "rover")  ## Rover::DataFrame (Default)
 ```
 
 ## Header, Index, Ignored Lines
